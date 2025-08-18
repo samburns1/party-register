@@ -3,6 +3,16 @@ import { createClient } from 'redis';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Redis is available
+    if (!process.env.REDIS_URL) {
+      return new NextResponse('phone,name,timestamp\n', {
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename="party_rsvps.csv"',
+        },
+      });
+    }
+
     // Connect to Redis and get all RSVPs from the list
     const redis = createClient({ url: process.env.REDIS_URL });
     await redis.connect();
