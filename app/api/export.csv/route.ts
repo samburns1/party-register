@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { createClient } from 'redis';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all RSVPs from the Redis list
-    const rsvps = await kv.lrange('party:rsvps', 0, -1);
+    // Connect to Redis and get all RSVPs from the list
+    const redis = createClient({ url: process.env.REDIS_URL });
+    await redis.connect();
+    const rsvps = await redis.lRange('party:rsvps', 0, -1);
+    await redis.disconnect();
     
     // Create CSV header
     let csvContent = 'phone,name,timestamp\n';

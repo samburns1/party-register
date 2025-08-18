@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
-import { kv } from '@vercel/kv';
+import { createClient } from 'redis';
 
 const CHAR_LIMIT = 40;
 
@@ -23,15 +23,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if we're in demo mode (missing env vars)
-    const isDemoMode = !process.env.TWILIO_ACCOUNT_SID || !process.env.KV_REST_API_URL;
+    const isDemoMode = !process.env.TWILIO_ACCOUNT_SID || !process.env.REDIS_URL;
     
     if (isDemoMode) {
       console.log(`[DEMO MODE] Would send SMS to ${phone}: "thanks, whats your first and last name"`);
       return NextResponse.json({ ok: true, limit: CHAR_LIMIT, demo: true });
     }
 
-    // Set state in KV store (expires in 24 hours)
-    await kv.set(`party:state:${phone}`, 'awaiting_name', { ex: 86400 });
+    // Connect to Redis and set state (expires in 24 hours)
+    const redis = createClient({ url: process.env.REDIS_URL });
+    await redis.connect();
+    await redis.setEx(`party:state:${phone}`, 86400, 'awaiting_name');
+    await redis.disconnect();
 
     // Send SMS
     await client.messages.create({
