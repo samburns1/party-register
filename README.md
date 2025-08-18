@@ -1,6 +1,6 @@
 # Party Register
 
-A Next.js app for collecting party RSVPs via SMS using Twilio and Vercel KV.
+A Next.js app for collecting party RSVPs via SMS using Twilio and Redis.
 
 ## Features
 
