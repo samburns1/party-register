@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { createClient } from 'redis';
+import { saveResponseToLocalCSV } from '../../utils/saveLocal';
 
 const CHAR_LIMIT = 40;
 
@@ -77,6 +78,9 @@ export async function POST(request: NextRequest) {
     };
     
     await redis.lPush('party:rsvps', JSON.stringify(rsvpData));
+    
+    // Also save to local CSV file (gitignored)
+    saveResponseToLocalCSV(from, body.trim(), rsvpData.ts);
     
     // Clear the state
     await redis.del(`party:state:${from}`);

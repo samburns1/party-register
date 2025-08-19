@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from 'redis';
 import sgMail from '@sendgrid/mail';
+import { saveResponseToLocalCSV } from '../../../utils/saveLocal';
 
 const CHAR_LIMIT = 40;
 
@@ -59,6 +60,9 @@ export async function POST(request: NextRequest) {
     };
     
     await redis.lPush('party:rsvps', JSON.stringify(rsvpData));
+    
+    // Also save to local CSV file (gitignored)
+    saveResponseToLocalCSV(fromEmail, cleanedName, rsvpData.ts);
     
     // Clear the state
     await redis.del(`party:state:${fromEmail}`);
