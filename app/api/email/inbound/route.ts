@@ -7,6 +7,10 @@ const CHAR_LIMIT = 40;
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== WEBHOOK CALLED ===');
+    console.log('Headers:', Object.fromEntries(request.headers.entries()));
+    console.log('Method:', request.method);
+    
     // Handle SendGrid inbound email webhook
     // SendGrid sends form data, not JSON
     const formData = await request.formData();

@@ -96,7 +96,7 @@ export default function PartyRegistration() {
             onClick={handleInitialClick}
             className="text-white/70 text-xl font-light tracking-wide hover:text-white/90 active:text-white transition-colors duration-300 cursor-pointer bg-transparent border-none outline-none py-4 px-2 min-h-[48px] text-center"
           >
-            {registrationMode === "EMAIL" ? "enter USC email here to register" : "enter phone # here to register"}
+            {registrationMode === "EMAIL" ? "register with @usc.edu email" : "enter phone # here to register"}
           </button>
         )}
 
