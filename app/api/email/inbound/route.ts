@@ -5,6 +5,14 @@ import { saveResponseToLocalCSV } from '../../../../utils/saveLocal';
 
 const CHAR_LIMIT = 40;
 
+export async function GET() {
+  return NextResponse.json({ 
+    message: 'SendGrid inbound email webhook endpoint',
+    method: 'POST',
+    status: 'ready'
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('=== WEBHOOK CALLED ===');
