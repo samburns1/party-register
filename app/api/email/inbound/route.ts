@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from 'redis';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 const CHAR_LIMIT = 40;
 
 export async function POST(request: NextRequest) {
   try {
-    // This will handle webhook from email service like SendGrid, Mailgun, etc.
+    // Handle SendGrid inbound email webhook
     const body = await request.json();
     
-    // Extract email data (format depends on your email service)
-    const fromEmail = body.from || body.sender;
-    const emailBody = body.text || body.content || body.body;
+    // SendGrid webhook format
+    const fromEmail = body.from;
+    const emailBody = body.text;
     
     if (!fromEmail || !emailBody) {
       return NextResponse.json({ error: 'Missing email data' }, { status: 400 });
@@ -83,21 +83,13 @@ function cleanEmailBody(body: string): string {
 
 async function sendAutoReply(toEmail: string, message: string) {
   try {
-    if (!process.env.SMTP_USER) return; // Skip in demo mode
+    if (!process.env.SENDGRID_API_KEY) return; // Skip in demo mode
 
-    const transporter = nodemailer.createTransporter({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-    await transporter.sendMail({
-      from: process.env.FROM_EMAIL,
+    await sgMail.send({
       to: toEmail,
+      from: process.env.FROM_EMAIL!,
       subject: 'Party Registration Update',
       text: message,
     });

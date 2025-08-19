@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { createClient } from 'redis';
 import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 const CHAR_LIMIT = 40;
 
@@ -41,7 +42,7 @@ async function handleEmailFlow(email: string) {
   }
 
   // Check if we're in demo mode
-  const isDemoMode = !process.env.SMTP_USER || !process.env.REDIS_URL;
+  const isDemoMode = !process.env.SENDGRID_API_KEY || !process.env.REDIS_URL;
   
   if (isDemoMode) {
     console.log(`[DEMO MODE] Would send email to ${email}: Name request`);
@@ -54,25 +55,21 @@ async function handleEmailFlow(email: string) {
   await redis.setEx(`party:state:${email}`, 86400, 'awaiting_name');
   await redis.disconnect();
 
-  // Send email
-  const transporter = nodemailer.createTransporter({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    from: process.env.FROM_EMAIL,
+  // Send email via SendGrid
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+  
+  await sgMail.send({
     to: email,
+    from: process.env.FROM_EMAIL!, // Must be verified sender in SendGrid
     subject: 'Complete Your Party Registration',
     html: `
       <h2>Thanks for registering!</h2>
-      <p>Please reply to this email with your first and last name to complete your registration.</p>
-      <p><strong>Keep it under ${CHAR_LIMIT} characters.</strong></p>
+      <p>Please <strong>reply to this email</strong> with your first and last name to complete your registration.</p>
+      <p><em>Keep it under ${CHAR_LIMIT} characters.</em></p>
+      <hr>
+      <p style="font-size: 12px; color: #666;">
+        This is an automated message. Simply reply with your name.
+      </p>
     `,
   });
 
