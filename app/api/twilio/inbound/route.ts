@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { createClient } from 'redis';
-import { saveResponseToLocalCSV } from '../../utils/saveLocal';
+import { saveResponseToLocalCSV } from '../../../../utils/saveLocal';
 
 const CHAR_LIMIT = 40;
 

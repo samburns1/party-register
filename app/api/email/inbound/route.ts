@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from 'redis';
 import sgMail from '@sendgrid/mail';
-import { saveResponseToLocalCSV } from '../../../utils/saveLocal';
+import { saveResponseToLocalCSV } from '../../../../utils/saveLocal';
 
 const CHAR_LIMIT = 40;
 
