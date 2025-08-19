@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
     
     const registrationMode = process.env.REGISTRATION_MODE || 'SMS';
     
+    console.log(`Registration mode: ${registrationMode}, Contact: ${contact}`);
+    
     if (registrationMode === 'EMAIL') {
       return await handleEmailFlow(contact);
     } else {
