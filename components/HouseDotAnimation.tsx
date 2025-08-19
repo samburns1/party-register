@@ -13,11 +13,8 @@ export default function HouseDotAnimation() {
     if (!ctx) return
 
     const updateCanvasSize = () => {
-      const container = canvas.parentElement
-      if (container) {
-        canvas.width = container.clientWidth
-        canvas.height = container.clientHeight
-      }
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
 
     updateCanvasSize()
@@ -31,11 +28,15 @@ export default function HouseDotAnimation() {
     const dotOffsets = new Map<string, { offsetX: number; offsetY: number; phase: number }>()
 
     function isInsideHouse(col: number, row: number): boolean {
-      const centerX = cols / 2
-      const centerY = rows / 2
+      const houseWidth = 100
+      const houseHeight = 120
+      const margin = 50
 
-      const x = col - centerX
-      const y = row - centerY
+      const houseCenterX = cols - margin - houseWidth / 2
+      const houseCenterY = rows - margin - houseHeight / 2
+
+      const x = col - houseCenterX
+      const y = row - houseCenterY
 
       const isInBody = y >= 20 && y <= 80 && x >= -50 && x <= 50
 
@@ -115,7 +116,7 @@ export default function HouseDotAnimation() {
   }, [])
 
   return (
-    <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
+    <div className="fixed inset-0 w-full h-full">
       <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   )
