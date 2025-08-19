@@ -181,7 +181,7 @@ export default function PartyRegistration() {
       
       {/* Compliance notice */}
       <div className="absolute bottom-4 left-4 text-white/40 text-xs max-w-xs">
-        You&apos;ll receive 1 email with party details after registering.
+        You&apos;ll receive a confirmation email after registering
       </div>
     </div>
   )
