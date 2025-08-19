@@ -63,14 +63,18 @@ export async function POST(request: NextRequest) {
       ts: new Date().toISOString()
     };
     
+    console.log('Saving RSVP:', rsvpData);
     await redis.lPush('party:rsvps', JSON.stringify(rsvpData));
+    console.log('RSVP saved to Redis successfully');
     
     // Also save to local CSV file (gitignored)
     saveResponseToLocalCSV(fromEmail, cleanedName, rsvpData.ts);
+    console.log('RSVP saved to local CSV successfully');
     
     // Clear the state
     await redis.del(`party:state:${fromEmail}`);
     await redis.disconnect();
+    console.log('Registration completed successfully for:', fromEmail);
 
     // Send confirmation email
     await sendAutoReply(fromEmail, `Got it, thanks ${cleanedName}! You're all set 🎉`);
