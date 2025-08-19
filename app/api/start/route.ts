@@ -51,11 +51,24 @@ async function handleEmailFlow(email: string) {
     return NextResponse.json({ ok: true, limit: CHAR_LIMIT, demo: true, mode: 'EMAIL' });
   }
 
-  // Connect to Redis and set state
-  const redis = createClient({ url: process.env.REDIS_URL });
-  await redis.connect();
-  await redis.setEx(`party:state:${email}`, 86400, 'awaiting_name');
-  await redis.disconnect();
+  // Save the registration immediately (no need to wait for reply)
+  const rsvpData = {
+    email: email,
+    name: 'Pending', // Will be updated if they reply with name
+    ts: new Date().toISOString()
+  };
+
+  if (process.env.REDIS_URL) {
+    try {
+      const redis = createClient({ url: process.env.REDIS_URL });
+      await redis.connect();
+      await redis.lPush('party:rsvps', JSON.stringify(rsvpData));
+      await redis.disconnect();
+      console.log('Registration saved to Redis');
+    } catch (error) {
+      console.error('Redis save failed:', error);
+    }
+  }
 
   // Send email via SendGrid
   sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -65,16 +78,32 @@ async function handleEmailFlow(email: string) {
   await sgMail.send({
     to: email,
     from: process.env.FROM_EMAIL!, // Must be verified sender in SendGrid
-    replyTo: process.env.FROM_EMAIL!, // Replies go to same verified address
-    subject: 'Complete Your Party Registration',
+    subject: 'Party Registration Confirmation 🎉',
     html: `
-      <h2>Thanks for registering!</h2>
-      <p>Please <strong>reply to this email</strong> with your first and last name to complete your registration.</p>
-      <p><em>Keep it under ${CHAR_LIMIT} characters.</em></p>
-      <hr>
-      <p style="font-size: 12px; color: #666;">
-        This is an automated message. Simply reply with your name.
-      </p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #8B7D7A; text-align: center;">You're Registered! 🎉</h2>
+        
+        <p style="font-size: 16px; line-height: 1.5;">
+          Thanks for registering with your USC email! You're all set for the party.
+        </p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #8B7D7A;">📍 Event Details</h3>
+          <p style="margin: 5px 0;"><strong>Date:</strong> [INSERT DATE]</p>
+          <p style="margin: 5px 0;"><strong>Time:</strong> [INSERT TIME]</p>
+          <p style="margin: 5px 0;"><strong>Location:</strong> [INSERT LOCATION ADDRESS]</p>
+          <p style="margin: 5px 0;"><strong>Dress Code:</strong> [INSERT DRESS CODE]</p>
+        </div>
+        
+        <p style="font-size: 16px; line-height: 1.5;">
+          We can't wait to see you there! If you have any questions, just reply to this email.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        <p style="font-size: 12px; color: #666; text-align: center;">
+          This is an automated confirmation. Your registration is complete.
+        </p>
+      </div>
     `,
   });
 
