@@ -65,7 +65,7 @@ async function handleEmailFlow(email: string) {
   await sgMail.send({
     to: email,
     from: process.env.FROM_EMAIL!, // Must be verified sender in SendGrid
-    replyTo: 'replies@mail.1306.space', // Replies go to inbound parse
+    replyTo: process.env.FROM_EMAIL!, // Replies go to same verified address
     subject: 'Complete Your Party Registration',
     html: `
       <h2>Thanks for registering!</h2>
