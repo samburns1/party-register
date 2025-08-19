@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import Image from "next/image"
+import HouseDotAnimation from "../components/HouseDotAnimation"
 
 type Step = "initial" | "contact-input" | "success"
 type RegistrationMode = "SMS" | "EMAIL"
@@ -164,15 +164,7 @@ export default function PartyRegistration() {
         )}
       </div>
 
-      <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
-        <Image 
-          src="/house_transparent.png" 
-          alt="House decoration"
-          width={256}
-          height={256}
-          className="w-full h-full object-cover rounded-tl-lg"
-        />
-      </div>
+      <HouseDotAnimation />
       
       {/* Compliance notice */}
       <div className="absolute bottom-4 left-4 text-white/40 text-xs max-w-xs">
