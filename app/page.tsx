@@ -144,9 +144,11 @@ export default function PhoneRegistration() {
       </div>
 
       <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
-        <div className="w-full h-full bg-white/10 rounded-tl-lg flex items-center justify-center">
-          <span className="text-white/30 text-sm font-light">House art here</span>
-        </div>
+        <img 
+          src="/house.png" 
+          alt="House decoration"
+          className="w-full h-full object-cover rounded-tl-lg"
+        />
       </div>
       
       {/* Compliance notice */}
