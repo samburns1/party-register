@@ -11,7 +11,14 @@ export default function PartyRegistration() {
   const [step, setStep] = useState<Step>("initial")
   const [contact, setContact] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [registrationMode, setRegistrationMode] = useState<RegistrationMode>("EMAIL")
+  const [registrationMode, setRegistrationMode] = useState<RegistrationMode>("SMS")
+
+  useEffect(() => {
+    fetch('/api/mode')
+      .then(res => res.json())
+      .then(data => setRegistrationMode(data.mode))
+      .catch(err => console.error('Failed to fetch registration mode:', err))
+  }, [])
 
   const handleInitialClick = () => {
     setStep("contact-input")
