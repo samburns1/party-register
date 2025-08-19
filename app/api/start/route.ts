@@ -58,9 +58,12 @@ async function handleEmailFlow(email: string) {
   // Send email via SendGrid
   sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
   
+  console.log(`Sending registration email to ${email} from ${process.env.FROM_EMAIL}`);
+  
   await sgMail.send({
     to: email,
     from: process.env.FROM_EMAIL!, // Must be verified sender in SendGrid
+    replyTo: 'replies@mail.1306.space', // Replies go to inbound parse
     subject: 'Complete Your Party Registration',
     html: `
       <h2>Thanks for registering!</h2>
@@ -72,6 +75,8 @@ async function handleEmailFlow(email: string) {
       </p>
     `,
   });
+
+  console.log(`Registration email sent successfully to ${email}`);
 
   return NextResponse.json({ ok: true, limit: CHAR_LIMIT, mode: 'EMAIL' });
 }

@@ -7,15 +7,22 @@ const CHAR_LIMIT = 40;
 export async function POST(request: NextRequest) {
   try {
     // Handle SendGrid inbound email webhook
-    const body = await request.json();
+    // SendGrid sends form data, not JSON
+    const formData = await request.formData();
+    
+    // Log all form data for debugging
+    console.log('SendGrid webhook received:', Object.fromEntries(formData.entries()));
     
     // SendGrid webhook format
-    const fromEmail = body.from;
-    const emailBody = body.text;
+    const fromEmail = formData.get('from') as string;
+    const emailBody = formData.get('text') as string;
     
     if (!fromEmail || !emailBody) {
+      console.error('Missing email data:', { fromEmail, emailBody });
       return NextResponse.json({ error: 'Missing email data' }, { status: 400 });
     }
+
+    console.log(`Processing email from ${fromEmail} with body: ${emailBody.substring(0, 50)}...`);
 
     // Connect to Redis
     const redis = createClient({ url: process.env.REDIS_URL });

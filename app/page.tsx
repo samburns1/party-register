@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import Image from "next/image"
 
 type Step = "initial" | "contact-input" | "success"
 type RegistrationMode = "SMS" | "EMAIL"
@@ -164,9 +165,11 @@ export default function PartyRegistration() {
       </div>
 
       <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
-        <img 
-          src="/house.png" 
+        <Image 
+          src="/house.svg" 
           alt="House decoration"
+          width={256}
+          height={256}
           className="w-full h-full object-cover rounded-tl-lg"
         />
       </div>
