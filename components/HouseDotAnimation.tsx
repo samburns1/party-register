@@ -23,8 +23,8 @@ export default function HouseDotAnimation() {
     updateCanvasSize()
     window.addEventListener("resize", updateCanvasSize)
 
-    const dotSize = 3
-    const spacing = 6
+    const dotSize = 2
+    const spacing = 3
     const cols = Math.floor(canvas.width / spacing)
     const rows = Math.floor(canvas.height / spacing)
 
@@ -34,37 +34,17 @@ export default function HouseDotAnimation() {
       const centerX = cols / 2
       const centerY = rows / 2
 
-      const x = col - centerX + 25
-      const y = row - centerY + 10
+      const x = col - centerX
+      const y = row - centerY
 
-      // Roof (triangular top)
-      if (y >= -20 && y <= 5) {
-        const roofTop = -20
-        const roofBottom = 5
-        const roofHeight = roofBottom - roofTop
-        const currentHeight = y - roofTop
-        const roofWidth = (currentHeight / roofHeight) * 30 + 3
+      const isInBody = y >= 20 && y <= 80 && x >= -50 && x <= 50
 
-        if (x >= 25 - roofWidth && x <= 25 + roofWidth) {
-          return true
-        }
-      }
+      const roofHeight = 40 // Height of triangle
+      const roofBase = 50 // Half-width of triangle base
 
-      // Main house body (rectangular)
-      if (y >= 5 && y <= 40) {
-        if (x >= 5 && x <= 45) {
-          return true
-        }
-      }
+      const isInRoof = y >= -40 && y <= 20 && Math.abs(x) <= roofBase * ((y + 40) / roofHeight)
 
-      // Chimney
-      if (y >= -12 && y <= 8) {
-        if (x >= 38 && x <= 43) {
-          return true
-        }
-      }
-
-      return false
+      return isInBody || isInRoof
     }
 
     function isPositionInHouse(col: number, row: number, offsetX: number, offsetY: number): boolean {
@@ -73,24 +53,20 @@ export default function HouseDotAnimation() {
       return isInsideHouse(Math.round(newCol), Math.round(newRow))
     }
 
-    // Animation state
     let animationFrame = 0
     const maxFrames = 120
 
     function animate() {
-      if (!ctx || !canvas) return
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = "#8B8B8B"
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Calculate animation progress
       const time = Date.now() * 0.001
 
-      // Draw dots
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
           const x = col * spacing
           const y = row * spacing
 
-          // Check if this position should have a dot (part of house shape)
           const isHouseDot = isInsideHouse(col, row)
 
           if (isHouseDot) {
@@ -98,42 +74,30 @@ export default function HouseDotAnimation() {
 
             if (!dotOffsets.has(dotKey)) {
               dotOffsets.set(dotKey, {
-                offsetX: (Math.random() - 0.5) * 2,
-                offsetY: (Math.random() - 0.5) * 2,
+                offsetX: (Math.random() - 0.5) * 1,
+                offsetY: (Math.random() - 0.5) * 1,
                 phase: Math.random() * Math.PI * 2,
               })
             }
 
             const dotData = dotOffsets.get(dotKey)!
 
-            const moveRadius = 1
-            const randomX = Math.sin(time * 0.6 + dotData.phase) * moveRadius + dotData.offsetX
-            const randomY = Math.cos(time * 0.8 + dotData.phase + 1) * moveRadius + dotData.offsetY
+            const moveRadius = 0.5
+            const randomX = Math.sin(time * 0.4 + dotData.phase) * moveRadius + dotData.offsetX
+            const randomY = Math.cos(time * 0.6 + dotData.phase + 1) * moveRadius + dotData.offsetY
 
-            let finalX = x
-            let finalY = y
+            const finalX = x + randomX
+            const finalY = y + randomY
 
-            if (isPositionInHouse(col, row, randomX, randomY)) {
-              finalX = x + randomX
-              finalY = y + randomY
-            }
+            const flicker1 = Math.sin(time * 3 + dotData.phase) > 0.1 ? 1 : 0
+            const flicker2 = Math.sin(time * 2.2 + dotData.phase + 2) > 0.3 ? 1 : 0
+            const flicker3 = Math.sin(time * 1.5 + dotData.phase + 4) > 0.5 ? 1 : 0
 
-            const flickerSpeed1 = Math.sin(time * 2.5 + dotData.phase) > 0.2 ? 1 : 0
-            const flickerSpeed2 = Math.sin(time * 1.8 + dotData.phase + 1) > 0.4 ? 1 : 0
+            const isVisible = flicker1 || flicker2 || flicker3
 
-            // Combine different flicker patterns for variety
-            const isVisible = flickerSpeed1 || flickerSpeed2
-            const opacity = isVisible ? 1 : 0
-
-            if (opacity > 0) {
-              ctx.fillStyle = "rgba(0, 0, 0, 1)" // Solid black when visible
+            if (isVisible) {
+              ctx.fillStyle = "rgba(0, 0, 0, 1)"
               ctx.fillRect(finalX - dotSize / 2, finalY - dotSize / 2, dotSize, dotSize)
-            }
-          } else {
-            if (Math.random() < 0.08) {
-              const backgroundOpacity = 0.01 + Math.random() * 0.02
-              ctx.fillStyle = `rgba(0, 0, 0, ${backgroundOpacity})`
-              ctx.fillRect(x - dotSize * 0.2, y - dotSize * 0.2, dotSize * 0.4, dotSize * 0.4)
             }
           }
         }
@@ -152,7 +116,7 @@ export default function HouseDotAnimation() {
 
   return (
     <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
-      <canvas ref={canvasRef} className="w-full h-full" style={{ filter: "contrast(1.5) brightness(0.9)" }} />
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   )
 }
