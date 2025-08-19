@@ -181,7 +181,7 @@ export default function PartyRegistration() {
       
       {/* Compliance notice */}
       <div className="absolute bottom-4 left-4 text-white/40 text-xs max-w-xs">
-        You&apos;ll receive a confirmation email after registering
+        Bring a USC ID!
       </div>
     </div>
   )
