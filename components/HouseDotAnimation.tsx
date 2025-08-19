@@ -57,6 +57,7 @@ export default function HouseDotAnimation() {
     const maxFrames = 120
 
     function animate() {
+      if (!ctx || !canvas) return
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       const time = Date.now() * 0.001
