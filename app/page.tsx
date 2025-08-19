@@ -11,14 +11,7 @@ export default function PartyRegistration() {
   const [step, setStep] = useState<Step>("initial")
   const [contact, setContact] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [registrationMode, setRegistrationMode] = useState<RegistrationMode>("SMS")
-
-  useEffect(() => {
-    fetch('/api/mode')
-      .then(res => res.json())
-      .then(data => setRegistrationMode(data.mode))
-      .catch(err => console.error('Failed to fetch registration mode:', err))
-  }, [])
+  const [registrationMode, setRegistrationMode] = useState<RegistrationMode>("EMAIL")
 
   const handleInitialClick = () => {
     setStep("contact-input")
@@ -173,7 +166,7 @@ export default function PartyRegistration() {
 
       <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
         <Image 
-          src="/house.svg" 
+          src="/house_transparent.png" 
           alt="House decoration"
           width={256}
           height={256}
