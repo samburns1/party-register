@@ -13,8 +13,11 @@ export default function HouseDotAnimation() {
     if (!ctx) return
 
     const updateCanvasSize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      const container = canvas.parentElement
+      if (container) {
+        canvas.width = container.clientWidth
+        canvas.height = container.clientHeight
+      }
     }
 
     updateCanvasSize()
@@ -31,32 +34,32 @@ export default function HouseDotAnimation() {
       const centerX = cols / 2
       const centerY = rows / 2
 
-      const x = col - centerX + 50
-      const y = row - centerY + 20
+      const x = col - centerX + 25
+      const y = row - centerY + 10
 
       // Roof (triangular top)
-      if (y >= -40 && y <= 10) {
-        const roofTop = -40
-        const roofBottom = 10
+      if (y >= -20 && y <= 5) {
+        const roofTop = -20
+        const roofBottom = 5
         const roofHeight = roofBottom - roofTop
         const currentHeight = y - roofTop
-        const roofWidth = (currentHeight / roofHeight) * 60 + 5
+        const roofWidth = (currentHeight / roofHeight) * 30 + 3
 
-        if (x >= 50 - roofWidth && x <= 50 + roofWidth) {
+        if (x >= 25 - roofWidth && x <= 25 + roofWidth) {
           return true
         }
       }
 
       // Main house body (rectangular)
-      if (y >= 10 && y <= 80) {
-        if (x >= 10 && x <= 90) {
+      if (y >= 5 && y <= 40) {
+        if (x >= 5 && x <= 45) {
           return true
         }
       }
 
       // Chimney
-      if (y >= -25 && y <= 15) {
-        if (x >= 75 && x <= 85) {
+      if (y >= -12 && y <= 8) {
+        if (x >= 38 && x <= 43) {
           return true
         }
       }
@@ -148,7 +151,7 @@ export default function HouseDotAnimation() {
   }, [])
 
   return (
-    <div className="fixed inset-0 w-full h-full">
+    <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
       <canvas ref={canvasRef} className="w-full h-full" style={{ filter: "contrast(1.5) brightness(0.9)" }} />
     </div>
   )
