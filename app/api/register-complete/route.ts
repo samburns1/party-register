@@ -18,22 +18,48 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Save registration to Redis
+    // Save registration and send to private email
     const rsvpData = {
       email: email,
       name: name,
       ts: new Date().toISOString()
     };
 
+    console.log('Registration received:', rsvpData);
+
+    // Send registration data to your private email immediately
+    if (process.env.SENDGRID_API_KEY && process.env.FROM_EMAIL) {
+      const csvData = `contact,name,timestamp,type\n"${email}","${name}","${rsvpData.ts}","EMAIL"`;
+      
+      try {
+        await sgMail.send({
+          to: 'samuel.b.burns@gmail.com', // Send to your email
+          from: process.env.FROM_EMAIL,
+          subject: `New Party Registration: ${name}`,
+          text: `New registration:\nName: ${name}\nEmail: ${email}\nTime: ${rsvpData.ts}`,
+          attachments: [{
+            content: Buffer.from(csvData).toString('base64'),
+            filename: `registration-${Date.now()}.csv`,
+            type: 'text/csv',
+            disposition: 'attachment'
+          }]
+        });
+        console.log('Registration data sent to private email');
+      } catch (error) {
+        console.error('Failed to send registration data:', error);
+      }
+    }
+
+    // Also try to save to Redis if available
     if (process.env.REDIS_URL) {
       try {
         const redis = createClient({ url: process.env.REDIS_URL });
         await redis.connect();
         await redis.lPush('party:rsvps', JSON.stringify(rsvpData));
         await redis.disconnect();
-        console.log('Registration saved:', rsvpData);
+        console.log('Registration also saved to database');
       } catch (error) {
-        console.error('Redis save failed:', error);
+        console.error('Redis save failed (but email sent):', error);
       }
     }
 

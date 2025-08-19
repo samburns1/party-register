@@ -78,14 +78,13 @@ async function handleEmailFlow(email: string) {
   await sgMail.send({
     to: email,
     from: process.env.FROM_EMAIL!, // Must be verified sender in SendGrid
-    subject: 'Party Registration Confirmation 🎉',
+    subject: 'You are registered, see email for detail',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #8B7D7A; text-align: center;">You're Registered! 🎉</h2>
         
         <p style="font-size: 16px; line-height: 1.5;">
-          Thanks for registering with your USC email! You're all set for the party.
-        </p>
+          Thanks for registering with your USC email. Bring your USC ID, we aren't letting anyone in without one.
         
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
           <h3 style="margin-top: 0; color: #8B7D7A;">📍 Event Details</h3>
@@ -96,7 +95,7 @@ async function handleEmailFlow(email: string) {
         </div>
         
         <p style="font-size: 16px; line-height: 1.5;">
-          We can't wait to see you there! If you have any questions, just reply to this email.
+        
         </p>
         
         <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
