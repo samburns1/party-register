@@ -13,8 +13,11 @@ export default function HouseDotAnimation() {
     if (!ctx) return
 
     const updateCanvasSize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      const container = canvas.parentElement
+      if (container) {
+        canvas.width = container.clientWidth
+        canvas.height = container.clientHeight
+      }
     }
 
     updateCanvasSize()
@@ -28,22 +31,18 @@ export default function HouseDotAnimation() {
     const dotOffsets = new Map<string, { offsetX: number; offsetY: number; phase: number }>()
 
     function isInsideHouse(col: number, row: number): boolean {
-      const houseWidth = 100
-      const houseHeight = 120
-      const margin = 50
+      const centerX = cols / 2
+      const centerY = rows / 2
 
-      const houseCenterX = cols - margin - houseWidth / 2
-      const houseCenterY = rows - margin - houseHeight / 2
+      const x = col - centerX
+      const y = row - centerY
 
-      const x = col - houseCenterX
-      const y = row - houseCenterY
+      const isInBody = y >= 10 && y <= 40 && x >= -25 && x <= 25
 
-      const isInBody = y >= 20 && y <= 80 && x >= -50 && x <= 50
+      const roofHeight = 20 // Height of triangle
+      const roofBase = 25 // Half-width of triangle base
 
-      const roofHeight = 40 // Height of triangle
-      const roofBase = 50 // Half-width of triangle base
-
-      const isInRoof = y >= -40 && y <= 20 && Math.abs(x) <= roofBase * ((y + 40) / roofHeight)
+      const isInRoof = y >= -20 && y <= 10 && Math.abs(x) <= roofBase * ((y + 20) / roofHeight)
 
       return isInBody || isInRoof
     }
@@ -58,8 +57,7 @@ export default function HouseDotAnimation() {
     const maxFrames = 120
 
     function animate() {
-      ctx.fillStyle = "#8B8B8B"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       const time = Date.now() * 0.001
 
@@ -116,7 +114,7 @@ export default function HouseDotAnimation() {
   }, [])
 
   return (
-    <div className="fixed inset-0 w-full h-full">
+    <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64">
       <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   )
