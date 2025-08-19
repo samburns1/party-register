@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     await redis.disconnect();
     
     // Create CSV header
-    let csvContent = 'phone,name,timestamp\n';
+    let csvContent = 'contact,name,timestamp,type\n';
     
     // Process each RSVP
     for (const rsvpJson of rsvps) {
@@ -28,7 +28,9 @@ export async function GET(request: NextRequest) {
         const rsvp = JSON.parse(rsvpJson as string);
         // Escape any commas in names by wrapping in quotes
         const escapedName = rsvp.name.includes(',') ? `"${rsvp.name}"` : rsvp.name;
-        csvContent += `${rsvp.phone},${escapedName},${rsvp.ts}\n`;
+        const contact = rsvp.phone || rsvp.email || 'unknown';
+        const type = rsvp.phone ? 'SMS' : 'EMAIL';
+        csvContent += `${contact},${escapedName},${rsvp.ts},${type}\n`;
       } catch (parseError) {
         console.error('Error parsing RSVP JSON:', parseError);
         // Skip malformed entries

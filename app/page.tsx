@@ -1,55 +1,59 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
-type Step = "initial" | "phone-input" | "success"
+type Step = "initial" | "contact-input" | "success"
+type RegistrationMode = "SMS" | "EMAIL"
 
-export default function PhoneRegistration() {
+export default function PartyRegistration() {
   const [step, setStep] = useState<Step>("initial")
-  const [phoneNumber, setPhoneNumber] = useState("")
+  const [contact, setContact] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [registrationMode, setRegistrationMode] = useState<RegistrationMode>("EMAIL")
 
   const handleInitialClick = () => {
-    setStep("phone-input")
+    setStep("contact-input")
   }
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!phoneNumber.trim()) return
+    if (!contact.trim()) return
 
     setIsLoading(true)
 
     try {
-      // Format phone for E.164 (+1XXXXXXXXXX)
-      const digits = phoneNumber.replace(/\D/g, "")
-      const e164Phone = `+1${digits}`
+      let formattedContact = contact.trim()
+      
+      // Format phone for E.164 if SMS mode
+      if (registrationMode === "SMS") {
+        const digits = contact.replace(/\D/g, "")
+        formattedContact = `+1${digits}`
+      }
       
       const response = await fetch("/api/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ phone: e164Phone }),
+        body: JSON.stringify({ contact: formattedContact }),
       })
 
       if (response.ok) {
         setStep("success")
       } else {
-        console.error("Failed to send SMS")
+        const data = await response.json()
+        alert(data.error || "Failed to send registration request")
       }
     } catch (error) {
-      console.error("Failed to send SMS:", error)
+      console.error("Failed to send registration:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
     const digits = value.replace(/\D/g, "")
-
-    // Format as XXX-XXX-XXXX
     if (digits.length >= 6) {
       return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`
     } else if (digits.length >= 3) {
@@ -58,10 +62,24 @@ export default function PhoneRegistration() {
     return digits
   }
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value)
-    if (formatted.replace(/\D/g, "").length <= 10) {
-      setPhoneNumber(formatted)
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    
+    if (registrationMode === "SMS") {
+      const formatted = formatPhoneNumber(value)
+      if (formatted.replace(/\D/g, "").length <= 10) {
+        setContact(formatted)
+      }
+    } else {
+      setContact(value)
+    }
+  }
+
+  const isValidInput = () => {
+    if (registrationMode === "EMAIL") {
+      return /^[a-zA-Z0-9._%+-]+@usc\.edu$/.test(contact.trim())
+    } else {
+      return contact.replace(/\D/g, "").length === 10
     }
   }
 
@@ -77,30 +95,30 @@ export default function PhoneRegistration() {
             onClick={handleInitialClick}
             className="text-white/70 text-xl font-light tracking-wide hover:text-white/90 active:text-white transition-colors duration-300 cursor-pointer bg-transparent border-none outline-none py-4 px-2 min-h-[48px] text-center"
           >
-            enter phone # here to register
+            {registrationMode === "EMAIL" ? "enter USC email here to register" : "enter phone # here to register"}
           </button>
         )}
 
-        {step === "phone-input" && (
-          <form onSubmit={handlePhoneSubmit} className="flex flex-col items-center space-y-8 w-full">
+        {step === "contact-input" && (
+          <form onSubmit={handleContactSubmit} className="flex flex-col items-center space-y-8 w-full">
             <input
-              type="tel"
-              value={phoneNumber}
-              onChange={handlePhoneChange}
-              placeholder="650-400-7441"
+              type={registrationMode === "EMAIL" ? "email" : "tel"}
+              value={contact}
+              onChange={handleContactChange}
+              placeholder={registrationMode === "EMAIL" ? "yourname@usc.edu" : "650-400-7441"}
               className="text-center text-white/70 text-xl font-light bg-transparent border-none outline-none placeholder:text-white/50 focus:text-white/90 focus:ring-0 focus:border-none min-h-[48px] w-full"
               style={{
                 backgroundColor: "transparent",
                 boxShadow: "none",
                 border: "none",
               }}
-              maxLength={12}
+              maxLength={registrationMode === "EMAIL" ? 50 : 12}
               autoFocus
-              aria-label="Phone number"
+              aria-label={registrationMode === "EMAIL" ? "USC Email" : "Phone number"}
             />
             <button
               type="submit"
-              disabled={!phoneNumber.trim() || isLoading || phoneNumber.replace(/\D/g, "").length !== 10}
+              disabled={!contact.trim() || isLoading || !isValidInput()}
               className="group disabled:opacity-30 disabled:cursor-not-allowed transition-opacity duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center"
             >
               {isLoading ? (
@@ -129,15 +147,17 @@ export default function PhoneRegistration() {
         {step === "success" && (
           <div className="text-center space-y-6 w-full">
             <div className="text-white/70 text-xl font-light tracking-wide">thanks ✓</div>
-            <div className="text-white/60 text-lg font-light tracking-wide">text sent, finish up there</div>
+            <div className="text-white/60 text-lg font-light tracking-wide">
+              {registrationMode === "EMAIL" ? "email sent, check your inbox" : "text sent, finish up there"}
+            </div>
             <button
               onClick={() => {
                 setStep("initial")
-                setPhoneNumber("")
+                setContact("")
               }}
               className="text-white/50 text-sm hover:text-white/70 transition-colors underline"
             >
-              Register another number
+              Register another {registrationMode === "EMAIL" ? "email" : "number"}
             </button>
           </div>
         )}
@@ -153,7 +173,10 @@ export default function PhoneRegistration() {
       
       {/* Compliance notice */}
       <div className="absolute bottom-4 left-4 text-white/40 text-xs max-w-xs">
-        You&apos;ll receive 1 SMS to complete RSVP. Reply STOP to opt out.
+        {registrationMode === "EMAIL" 
+          ? "You'll receive 1 email to complete RSVP. Reply with your name."
+          : "You'll receive 1 SMS to complete RSVP. Reply STOP to opt out."
+        }
       </div>
     </div>
   )

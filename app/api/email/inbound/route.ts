@@ -1,0 +1,107 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from 'redis';
+import nodemailer from 'nodemailer';
+
+const CHAR_LIMIT = 40;
+
+export async function POST(request: NextRequest) {
+  try {
+    // This will handle webhook from email service like SendGrid, Mailgun, etc.
+    const body = await request.json();
+    
+    // Extract email data (format depends on your email service)
+    const fromEmail = body.from || body.sender;
+    const emailBody = body.text || body.content || body.body;
+    
+    if (!fromEmail || !emailBody) {
+      return NextResponse.json({ error: 'Missing email data' }, { status: 400 });
+    }
+
+    // Connect to Redis
+    const redis = createClient({ url: process.env.REDIS_URL });
+    await redis.connect();
+
+    // Check if user is in awaiting_name state
+    const state = await redis.get(`party:state:${fromEmail}`);
+    if (state !== 'awaiting_name') {
+      await redis.disconnect();
+      
+      // Send auto-reply
+      await sendAutoReply(fromEmail, "Hi! Please visit our registration site to begin the RSVP process.");
+      
+      return NextResponse.json({ message: 'Email processed - not in registration flow' });
+    }
+
+    // Clean up the email body (remove signatures, quotes, etc.)
+    const cleanedName = cleanEmailBody(emailBody);
+
+    // Check character limit
+    if (cleanedName.length > CHAR_LIMIT) {
+      await redis.disconnect();
+      
+      await sendAutoReply(fromEmail, `Name is too long. Please reply with first and last name under ${CHAR_LIMIT} characters.`);
+      
+      return NextResponse.json({ message: 'Name too long - auto-reply sent' });
+    }
+
+    // Store the RSVP
+    const rsvpData = {
+      email: fromEmail,
+      name: cleanedName,
+      ts: new Date().toISOString()
+    };
+    
+    await redis.lPush('party:rsvps', JSON.stringify(rsvpData));
+    
+    // Clear the state
+    await redis.del(`party:state:${fromEmail}`);
+    await redis.disconnect();
+
+    // Send confirmation email
+    await sendAutoReply(fromEmail, `Got it, thanks ${cleanedName}! You're all set 🎉`);
+
+    return NextResponse.json({ message: 'Registration completed successfully' });
+    
+  } catch (error) {
+    console.error('Inbound email processing error:', error);
+    return NextResponse.json({ error: 'Failed to process email' }, { status: 500 });
+  }
+}
+
+function cleanEmailBody(body: string): string {
+  // Remove common email artifacts
+  let cleaned = body
+    .split('\n')[0] // Take first line only
+    .replace(/^(Re:|RE:|Fwd:|FWD:)/i, '') // Remove reply prefixes
+    .replace(/On.*wrote:/g, '') // Remove "On [date] wrote:" lines
+    .replace(/From:.*$/gm, '') // Remove "From:" lines
+    .replace(/Sent from my.*/i, '') // Remove "Sent from my iPhone" etc
+    .trim();
+  
+  return cleaned;
+}
+
+async function sendAutoReply(toEmail: string, message: string) {
+  try {
+    if (!process.env.SMTP_USER) return; // Skip in demo mode
+
+    const transporter = nodemailer.createTransporter({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.FROM_EMAIL,
+      to: toEmail,
+      subject: 'Party Registration Update',
+      text: message,
+    });
+  } catch (error) {
+    console.error('Failed to send auto-reply:', error);
+  }
+}
